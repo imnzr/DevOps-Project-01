@@ -1,7 +1,7 @@
 package main
 
-import "fmt"
+import "github.com/imnzr/DevOps-Project-01/todo-list-api/config"
 
 func main() {
-	fmt.Println("Hello World")
+	config.DatabaseConnection()
 }
