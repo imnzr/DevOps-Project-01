@@ -79,6 +79,25 @@ func (repository *UserRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, 
 }
 
 func (repository *UserRepositoryImpl) FindByAll(ctx context.Context, tx *sql.Tx) []domain.User {
-	panic("implementation here")
+	query := "SELECT id, username, email FROM user"
+	rows, err := tx.QueryContext(ctx, query)
+	if err != nil {
+		// err handler here
+	}
+
+	defer rows.Close()
+
+	var users []domain.User
+
+	for rows.Next() {
+		user := domain.User{}
+		err := rows.Scan(&user.Id, &user.Username, &user.Email)
+		if err != nil {
+			// err handler here
+		}
+		users = append(users, user)
+	}
+
+	return users
 
 }
