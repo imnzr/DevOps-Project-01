@@ -42,14 +42,79 @@ func (service *UserServiceImplementation) Create(ctx context.Context, request we
 	}
 }
 func (service *UserServiceImplementation) Update(ctx context.Context, request web.UserUpdateRequest) response.UserResponse {
-	panic("Impl here")
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(fmt.Errorf("failed to begin transaction: %w", err))
+	}
+	defer helper.HandleTx(tx)
+
+	user, err := service.UserRepository.FindById(ctx, tx, request.Id)
+	if err != nil {
+		panic(fmt.Errorf("user not found: %w", err))
+	}
+
+	user.Username = request.Username
+	user.Email = request.Email
+	user.Password = request.Password
+
+	userUpdate, err := service.UserRepository.Update(ctx, tx, user)
+	if err != nil {
+		panic(fmt.Errorf("failed to update user: %w", err))
+	}
+
+	return response.UserResponse{
+		Username: userUpdate.Username,
+		Email:    userUpdate.Email,
+	}
+
 }
 func (service *UserServiceImplementation) Delete(ctx context.Context, userId int) {
-	panic("Impl  here")
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(fmt.Errorf("failed to begin transaction: %w", err))
+	}
+	defer helper.HandleTx(tx)
+
+	user, err := service.UserRepository.FindById(ctx, tx, userId)
+	if err != nil {
+		panic(fmt.Errorf("failed to delete user: %w", err))
+	}
+
+	service.UserRepository.Delete(ctx, tx, user)
 }
 func (service *UserServiceImplementation) FindById(ctx context.Context, userId int) response.UserResponse {
-	panic("Impl here")
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(fmt.Errorf("failed to begin transaction: %w", err))
+	}
+	defer helper.HandleTx(tx)
+
+	user, err := service.UserRepository.FindById(ctx, tx, userId)
+	if err != nil {
+		panic(fmt.Errorf("user not found: %w", err))
+	}
+
+	return response.UserResponse{
+		Username: user.Username,
+		Email:    user.Email,
+	}
 }
 func (service *UserServiceImplementation) FindByAll(ctx context.Context) []response.UserResponse {
-	panic("Impl here")
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(fmt.Errorf("failed to begin transaction: %w", err))
+	}
+	defer helper.HandleTx(tx)
+
+	users := service.UserRepository.FindByAll(ctx, tx)
+
+	var userResponse []response.UserResponse
+	for _, users := range users {
+		userResponse = append(userResponse, response.UserResponse{
+			Username: users.Username,
+			Email:    users.Email,
+		})
+	}
+
+	return userResponse
 }
