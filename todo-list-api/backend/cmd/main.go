@@ -26,6 +26,10 @@ func main() {
 
 	router := httprouter.New()
 
+	/*
+		USER END POINT
+	*/
+
 	// Mencari semua user
 	router.GET("/api/users", userController.FindByAll)
 	// Mencari user berdasarkan id
@@ -39,6 +43,15 @@ func main() {
 		Addr:    "localhost:8085",
 		Handler: router,
 	}
+
+	/*
+		USER END POINT END
+	*/
+
+	/*
+		TODO END POINT
+
+	*/
 
 	err = server.ListenAndServe()
 	if err != nil {
