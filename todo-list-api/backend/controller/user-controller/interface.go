@@ -1,4 +1,4 @@
-package control
+package usercontroller
 
 import (
 	"net/http"
@@ -12,4 +12,7 @@ type UserController interface {
 	Delete(writter http.ResponseWriter, request *http.Request, params httprouter.Params)
 	FindById(writter http.ResponseWriter, request *http.Request, params httprouter.Params)
 	FindByAll(writter http.ResponseWriter, request *http.Request, params httprouter.Params)
+
+	// Login
+	Login(writter http.ResponseWriter, request *http.Request, params httprouter.Params)
 }

@@ -1,4 +1,4 @@
-package service
+package userservice
 
 import (
 	"context"
@@ -13,4 +13,7 @@ type UserService interface {
 	Delete(ctx context.Context, userId int)
 	FindById(ctx context.Context, userId int) response.UserResponse
 	FindByAll(ctx context.Context) []response.UserResponse
+
+	// Login service
+	Login(ctx context.Context, request web.UserLoginRequest) response.UserResponse
 }

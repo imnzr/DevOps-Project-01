@@ -1,4 +1,4 @@
-package repo
+package userrepository
 
 import (
 	"context"
@@ -16,4 +16,7 @@ type UserRepository interface {
 	Delete(ctx context.Context, tx *sql.Tx, user domain.User) error
 	FindById(ctx context.Context, tx *sql.Tx, userId int) (domain.User, error)
 	FindByAll(ctx context.Context, tx *sql.Tx) []domain.User
+
+	// Login user
+	Login(ctx context.Context, tx *sql.Tx, user domain.User) (domain.User, error)
 }

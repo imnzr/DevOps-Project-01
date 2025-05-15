@@ -6,14 +6,14 @@ func HandleTx(tx *sql.Tx) {
 	err := recover()
 	if err != nil {
 		errRollback := tx.Rollback()
-		if errRollback == nil {
-			panic(err)
-		}
+		PanicIfError(errRollback)
 		panic(err)
 	} else {
 		errorCommit := tx.Commit()
-		if errorCommit != nil {
-			panic(errorCommit)
-		}
+		PanicIfError(errorCommit)
 	}
+}
+
+func CommitOrRollback(tx *sql.Tx) {
+
 }

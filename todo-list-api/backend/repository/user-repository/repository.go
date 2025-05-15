@@ -1,4 +1,4 @@
-package implementation
+package userrepository
 
 import (
 	"context"
@@ -6,10 +6,15 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/imnzr/DevOps-Project-01/todo-list-api/backend/helper"
 	"github.com/imnzr/DevOps-Project-01/todo-list-api/backend/models/domain"
 )
 
 type UserRepositoryImpl struct{}
+
+func NewUserRepository() UserRepository {
+	return &UserRepositoryImpl{}
+}
 
 func (repository *UserRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, user domain.User) (domain.User, error) {
 	query := "INSERT INTO user(username, email, password) VALUES(?, ?, ?)"
@@ -100,4 +105,21 @@ func (repository *UserRepositoryImpl) FindByAll(ctx context.Context, tx *sql.Tx)
 
 	return users
 
+}
+
+// Login implements UserRepository.
+func (repository *UserRepositoryImpl) Login(ctx context.Context, tx *sql.Tx, user domain.User) (domain.User, error) {
+	query := "SELECT id, username, email, password FROM user WHERE email = ? LIMIT 1"
+	row := tx.QueryRowContext(ctx, query, user.Email)
+
+	var dbUser domain.User
+
+	err := row.Scan(&dbUser.Id, &dbUser.Username, &dbUser.Email, &dbUser.Password)
+	helper.PanicIfError(err)
+
+	if dbUser.Password != user.Password {
+		panic("password yang anda masukkan salah")
+	}
+
+	return dbUser, nil
 }
