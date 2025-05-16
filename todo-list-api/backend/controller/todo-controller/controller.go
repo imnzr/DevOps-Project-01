@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/imnzr/DevOps-Project-01/todo-list-api/backend/helper"
 	web "github.com/imnzr/DevOps-Project-01/todo-list-api/backend/models/web/request"
@@ -88,12 +89,23 @@ func (controller *TodoControllerImpl) FindByAll(writter http.ResponseWriter, req
 
 // FindById implements TodoController.
 func (controller *TodoControllerImpl) FindById(writter http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	userId := params.ByName("userId")
-	id, err := strconv.Atoi(userId)
-	helper.PanicIfError(err)
+	todoId := params.ByName("todoId")
+	id, err := strconv.Atoi(todoId)
+	if err != nil {
+		helper.WriteErrorResponse(writter, http.StatusBadRequest, "invalid user id: "+err.Error())
+		return
+	}
 
 	todoResponse, err := controller.TodoService.FindById(request.Context(), id)
-	helper.PanicIfError(err)
+	if err != nil {
+		// Deteksi error not found
+		if strings.Contains(err.Error(), "not found") {
+			helper.WriteErrorResponse(writter, http.StatusNotFound, err.Error())
+			return
+		}
+		// Default : error internal
+		helper.WriteErrorResponse(writter, http.StatusInternalServerError, "failed to retrieve todo: "+err.Error())
+	}
 
 	webResponse := response.WebResponse{
 		Code:   200,
@@ -101,9 +113,13 @@ func (controller *TodoControllerImpl) FindById(writter http.ResponseWriter, requ
 		Data:   todoResponse,
 	}
 	writter.Header().Add("Content-Type", "application/json")
-	encoder := json.NewEncoder(writter)
-	err = encoder.Encode(webResponse)
-	helper.PanicIfError(err)
+	err = json.NewEncoder(writter).Encode(webResponse)
+	if err != nil {
+		helper.WriteErrorResponse(writter, http.StatusInternalServerError, "failed to encode response: "+err.Error())
+	}
+	// encoder := json.NewEncoder(writter)
+	// err = encoder.Encode(webResponse)
+	// helper.PanicIfError(err)
 }
 
 // UpdateByDescription implements TodoController.

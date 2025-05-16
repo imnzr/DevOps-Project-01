@@ -52,10 +52,14 @@ func main() {
 	router.POST("/todo/create", todoController.Create)
 	// Menampilkan semua todo
 	router.GET("/api/todos", todoController.FindByAll)
+	// Menampilkan todo berdasarkan id
+	router.GET("/api/todo/:todoId", todoController.FindById)
 	// Mengubah title dari todo
 	router.PUT("/todo/update-title/:todoId", todoController.UpdateByTitle)
 	// Mengubah description dari todo
 	router.PUT("/todo/update-description/:todoId", todoController.UpdateByDescription)
+	// Menghapus todo
+	router.DELETE("/todo/delete/:todoId", todoController.Delete)
 
 	server := http.Server{
 		Addr:    "localhost:8085",
