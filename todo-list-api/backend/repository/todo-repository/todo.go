@@ -1,4 +1,4 @@
-package todo
+package todorepository
 
 import (
 	"context"
@@ -12,8 +12,8 @@ type TodoRepositoryImpl struct{}
 
 // UpdateDescription implements TodoRepository.
 func (t *TodoRepositoryImpl) UpdateDescription(ctx context.Context, tx *sql.Tx, todo domain.Todo) (domain.Todo, error) {
-	query := "UPDATE `todos` SET description = ? WHERE id = ?"
-	_, err := tx.ExecContext(ctx, query, todo.Description)
+	query := "UPDATE `todo` SET description = ? WHERE id = ?"
+	_, err := tx.ExecContext(ctx, query, todo.Description, todo.Id)
 	if err != nil {
 		return todo, fmt.Errorf("failed to update description")
 	}
@@ -23,8 +23,8 @@ func (t *TodoRepositoryImpl) UpdateDescription(ctx context.Context, tx *sql.Tx, 
 
 // UpdateTitle implements TodoRepository.
 func (t *TodoRepositoryImpl) UpdateTitle(ctx context.Context, tx *sql.Tx, todo domain.Todo) (domain.Todo, error) {
-	query := "UPDATE `todos` SET title = ? WHERE id = ?"
-	_, err := tx.ExecContext(ctx, query, todo.Title)
+	query := "UPDATE `todo` SET title = ? WHERE id = ?"
+	_, err := tx.ExecContext(ctx, query, todo.Title, todo.Id)
 	if err != nil {
 		return todo, fmt.Errorf("failed to update title")
 	}
@@ -34,7 +34,7 @@ func (t *TodoRepositoryImpl) UpdateTitle(ctx context.Context, tx *sql.Tx, todo d
 
 // Delete implements TodoRepository.
 func (t *TodoRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx, todo domain.Todo) error {
-	query := "DELETE FROM `todos` WHERE id = ?"
+	query := "DELETE FROM `todo` WHERE id = ?"
 	result, err := tx.ExecContext(ctx, query, todo.Id)
 	if err != nil {
 		return fmt.Errorf("failed to delete user with ID: %w", err)
@@ -53,7 +53,7 @@ func (t *TodoRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx, todo domain
 
 // FindByAll implements TodoRepository.
 func (t *TodoRepositoryImpl) FindByAll(ctx context.Context, tx *sql.Tx) ([]domain.Todo, error) {
-	query := "SELECT id, title, description WHERE id = ?"
+	query := "SELECT id, title, description FROM todo"
 	rows, err := tx.QueryContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("error executing query: %w", err)
@@ -77,7 +77,7 @@ func (t *TodoRepositoryImpl) FindByAll(ctx context.Context, tx *sql.Tx) ([]domai
 
 // FindById implements TodoRepository.
 func (t *TodoRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, todoId int) (domain.Todo, error) {
-	query := "SELECT id, title, description FROM todos WHERE id = ?"
+	query := "SELECT id, title, description FROM todo WHERE id = ?"
 	rows, err := tx.QueryContext(ctx, query, todoId)
 	if err != nil {
 		return domain.Todo{}, fmt.Errorf("error executing query for todo id %d: %w", todoId, err)
@@ -100,7 +100,7 @@ func (t *TodoRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, todoId in
 
 // Save implements TodoRepository.
 func (t *TodoRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, todo domain.Todo) (domain.Todo, error) {
-	query := "INSERT INTO todos(title, description,) VALUES(?, ?)"
+	query := "INSERT INTO todo(title, description) VALUES(?, ?)"
 	result, err := tx.ExecContext(ctx, query, todo.Title, todo.Description)
 	if err != nil {
 		return todo, fmt.Errorf("failed to insert todo: %w", err)

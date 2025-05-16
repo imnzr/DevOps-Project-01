@@ -1,4 +1,4 @@
-package todo
+package todoservice
 
 import (
 	"context"
@@ -9,15 +9,15 @@ import (
 	"github.com/imnzr/DevOps-Project-01/todo-list-api/backend/models/domain"
 	web "github.com/imnzr/DevOps-Project-01/todo-list-api/backend/models/web/request"
 	"github.com/imnzr/DevOps-Project-01/todo-list-api/backend/models/web/response"
-	"github.com/imnzr/DevOps-Project-01/todo-list-api/backend/repository/todo"
+	todorepository "github.com/imnzr/DevOps-Project-01/todo-list-api/backend/repository/todo-repository"
 )
 
 type TodoServiceImpl struct {
-	TodoRepository todo.TodoRepository
+	TodoRepository todorepository.TodoRepository
 	DB             *sql.DB
 }
 
-func NewTodoService(todoRepository todo.TodoRepository, DB *sql.DB) TodoService {
+func NewTodoService(todoRepository todorepository.TodoRepository, DB *sql.DB) TodoService {
 	return &TodoServiceImpl{
 		TodoRepository: todoRepository,
 		DB:             DB,
@@ -143,14 +143,14 @@ func (service *TodoServiceImpl) UpdateTitle(ctx context.Context, request web.Tod
 
 	todo, err := service.TodoRepository.FindById(ctx, tx, request.Id)
 	if err != nil {
-		// error handle here
+		return response.TodoResponse{}, fmt.Errorf("failed to find todo with ID %d: %w", request.Id, err)
 	}
 
 	todo.Title = request.Title
 
 	userUpdateTitle, err := service.TodoRepository.UpdateTitle(ctx, tx, todo)
 	if err != nil {
-		// error handle here
+		return response.TodoResponse{}, fmt.Errorf("failed to updaate title for todo ID %d: %w", request.Id, err)
 	}
 
 	return response.TodoResponse{

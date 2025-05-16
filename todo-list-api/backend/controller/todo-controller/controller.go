@@ -1,4 +1,4 @@
-package todo
+package todocontroller
 
 import (
 	"encoding/json"
@@ -9,12 +9,12 @@ import (
 	"github.com/imnzr/DevOps-Project-01/todo-list-api/backend/helper"
 	web "github.com/imnzr/DevOps-Project-01/todo-list-api/backend/models/web/request"
 	"github.com/imnzr/DevOps-Project-01/todo-list-api/backend/models/web/response"
-	"github.com/imnzr/DevOps-Project-01/todo-list-api/backend/service/todo"
+	todoservice "github.com/imnzr/DevOps-Project-01/todo-list-api/backend/service/todo-service"
 	"github.com/julienschmidt/httprouter"
 )
 
 type TodoControllerImpl struct {
-	TodoService todo.TodoService
+	TodoService todoservice.TodoService
 }
 
 // Create implements TodoController.
@@ -23,12 +23,14 @@ func (controller *TodoControllerImpl) Create(writter http.ResponseWriter, reques
 	todoCreateRequest := web.TodoCreateRequest{}
 	err := decoder.Decode(&todoCreateRequest)
 	if err != nil {
-		// error handler here
+		http.Error(writter, "Invalid request body", http.StatusBadRequest)
+		return
 	}
 
 	todoResponse, err := controller.TodoService.Create(request.Context(), todoCreateRequest)
 	if err != nil {
-		// error handler here
+		http.Error(writter, "Failed to create todo"+err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	webResponse := response.WebResponse{
@@ -108,17 +110,25 @@ func (controller *TodoControllerImpl) FindById(writter http.ResponseWriter, requ
 func (controller *TodoControllerImpl) UpdateByDescription(writter http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	decoder := json.NewDecoder(request.Body)
 	todoUpdateRequest := web.TodoUpdateRequest{}
-	err := decoder.Decode(&todoUpdateRequest)
-	helper.PanicIfError(err)
+	if err := decoder.Decode(&todoUpdateRequest); err != nil {
+		helper.WriteErrorResponse(writter, http.StatusBadRequest, "invalid request body: "+err.Error())
+		return
+	}
 
 	todoId := params.ByName("todoId")
 	id, err := strconv.Atoi(todoId)
-	helper.PanicIfError(err)
+	if err != nil {
+		helper.WriteErrorResponse(writter, http.StatusBadRequest, "invalid todo ID: "+err.Error())
+		return
+	}
 
 	todoUpdateRequest.Id = id
 
 	todoResponse, err := controller.TodoService.UpdateDescription(request.Context(), todoUpdateRequest)
-	helper.PanicIfError(err)
+	if err != nil {
+		helper.WriteErrorResponse(writter, http.StatusInternalServerError, "failed to update description: "+err.Error())
+		return
+	}
 
 	webResponse := response.WebResponse{
 		Code:   200,
@@ -127,40 +137,51 @@ func (controller *TodoControllerImpl) UpdateByDescription(writter http.ResponseW
 	}
 
 	writter.Header().Add("Content-Type", "application/json")
-	encoder := json.NewEncoder(writter)
-	err = encoder.Encode(webResponse)
-	helper.PanicIfError(err)
+	writter.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(writter).Encode(webResponse)
+	// encoder := json.NewEncoder(writter)
+	// err = encoder.Encode(webResponse)
+	// helper.PanicIfError(err)
 }
 
 // UpdateByTitle implements TodoController.
 func (controller *TodoControllerImpl) UpdateByTitle(writter http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	decoder := json.NewDecoder(request.Body)
 	todoUpdateRequest := web.TodoUpdateRequest{}
-	err := decoder.Decode(&todoUpdateRequest)
-	helper.PanicIfError(err)
+	if err := decoder.Decode(&todoUpdateRequest); err != nil {
+		helper.WriteErrorResponse(writter, http.StatusBadRequest, "invalid request body: "+err.Error())
+		return
+	}
 
 	todoId := params.ByName("todoId")
 	id, err := strconv.Atoi(todoId)
-	helper.PanicIfError(err)
+	if err != nil {
+		helper.WriteErrorResponse(writter, http.StatusBadRequest, "invalid todo ID: "+err.Error())
+		return
+	}
 
 	todoUpdateRequest.Id = id
 
 	todoResponse, err := controller.TodoService.UpdateTitle(request.Context(), todoUpdateRequest)
-	helper.PanicIfError(err)
+	if err != nil {
+		helper.WriteErrorResponse(writter, http.StatusInternalServerError, "failed to update todo: "+err.Error())
+		return
+	}
 
 	webResponse := response.WebResponse{
-		Code:   200,
+		Code:   http.StatusOK,
 		Status: "OK",
 		Data:   todoResponse,
 	}
 
 	writter.Header().Add("Content-Type", "application/json")
-	encoder := json.NewEncoder(writter)
-	err = encoder.Encode(webResponse)
-	helper.PanicIfError(err)
+	json.NewEncoder(writter).Encode(webResponse)
+	// encoder := json.NewEncoder(writter)
+	// err = encoder.Encode(webResponse)
+	// helper.PanicIfError(err)
 }
 
-func NewTodoController(todoService todo.TodoService) TodoController {
+func NewTodoController(todoService todoservice.TodoService) TodoController {
 	return &TodoControllerImpl{
 		TodoService: todoService,
 	}
